@@ -5,24 +5,11 @@ import { Search, Plus, MapPin, DollarSign, Star, Edit, Trash2 } from 'lucide-rea
 import { useHotels } from '../hooks/useHotels';
 
 export const Hotels: React.FC = () => {
-  const { hotels, isLoading, filters, setFilters, createHotel, updateHotel, deleteHotel } = useHotels();
+  const { hotels, createHotel, updateHotel, deleteHotel } = useHotels();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Mettre à jour les filtres
-  const handleFilterChange = () => {
-    setFilters({
-      search: searchTerm,
-      city: selectedCity,
-      minPrice: minPrice ? parseFloat(minPrice) : undefined,
-      maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-    });
-  };
 
   // Filtrer les hôtels localement aussi
   const filteredHotels = hotels.filter(hotel =>
