@@ -38,7 +38,7 @@ db.sqlite3
 *~
 
 # Environment
-.env
+# .env
 .env.local
 .env.*.local
 
