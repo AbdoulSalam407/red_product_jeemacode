@@ -66,10 +66,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DATABASE_NAME', default='abdoul-salam-diallo_red_product'),
-        'USER': config('DATABASE_USER', default='abdoul-salam-diallo_red_product'),
-        'PASSWORD': config('DATABASE_PASSWORD', default='Asd781209169#'),
-        'HOST': config('DATABASE_HOST', default='postgresql-abdoul-salam-diallo.alwaysdata.net'),
+        'NAME': config('DATABASE_NAME', default='red_product'),
+        'USER': config('DATABASE_USER', default='postgres'),
+        'PASSWORD': config('DATABASE_PASSWORD', default=''),
+        'HOST': config('DATABASE_HOST', default='localhost'),
         'PORT': config('DATABASE_PORT', default='5432'),
     }
 }
