@@ -1,0 +1,154 @@
+[
+  {
+    "model": "hotels.hotel",
+    "pk": 1,
+    "fields": {
+      "name": "Hôtel Dakar Palace",
+      "description": "Luxe et confort au cœur de Dakar",
+      "city": "Dakar",
+      "address": "Avenue Cheikh Anta Diop, Dakar",
+      "phone": "+221 33 869 00 00",
+      "email": "info@dakarpalace.sn",
+      "price_per_night": "150.00",
+      "rating": 4.8,
+      "rooms_count": 120,
+      "available_rooms": 45,
+      "is_active": true,
+      "created_at": "2025-12-02T00:00:00Z",
+      "updated_at": "2025-12-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "hotels.hotel",
+    "pk": 2,
+    "fields": {
+      "name": "Saly Beach Resort",
+      "description": "Resort balnéaire avec vue sur l'océan",
+      "city": "Saly",
+      "address": "Plage de Saly, Mbour",
+      "phone": "+221 33 957 00 00",
+      "email": "contact@salybeach.sn",
+      "price_per_night": "120.00",
+      "rating": 4.6,
+      "rooms_count": 80,
+      "available_rooms": 30,
+      "is_active": true,
+      "created_at": "2025-12-02T00:00:00Z",
+      "updated_at": "2025-12-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "hotels.hotel",
+    "pk": 3,
+    "fields": {
+      "name": "Thiès Comfort Inn",
+      "description": "Hôtel confortable pour voyageurs d'affaires",
+      "city": "Thiès",
+      "address": "Rue Blaise Diagne, Thiès",
+      "phone": "+221 33 951 00 00",
+      "email": "booking@thiescomfort.sn",
+      "price_per_night": "80.00",
+      "rating": 4.4,
+      "rooms_count": 60,
+      "available_rooms": 20,
+      "is_active": true,
+      "created_at": "2025-12-02T00:00:00Z",
+      "updated_at": "2025-12-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "hotels.hotel",
+    "pk": 4,
+    "fields": {
+      "name": "Kaolack Luxury Hotel",
+      "description": "Hôtel de luxe avec services premium",
+      "city": "Kaolack",
+      "address": "Boulevard de l'Indépendance, Kaolack",
+      "phone": "+221 33 941 00 00",
+      "email": "luxury@kaolack.sn",
+      "price_per_night": "95.00",
+      "rating": 4.5,
+      "rooms_count": 50,
+      "available_rooms": 15,
+      "is_active": true,
+      "created_at": "2025-12-02T00:00:00Z",
+      "updated_at": "2025-12-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "hotels.hotel",
+    "pk": 5,
+    "fields": {
+      "name": "Saint-Louis Riverside",
+      "description": "Hôtel historique au bord du fleuve Sénégal",
+      "city": "Saint-Louis",
+      "address": "Rue Blaise Diagne, Saint-Louis",
+      "phone": "+221 33 961 00 00",
+      "email": "info@stlouisriverside.sn",
+      "price_per_night": "110.00",
+      "rating": 4.7,
+      "rooms_count": 70,
+      "available_rooms": 25,
+      "is_active": true,
+      "created_at": "2025-12-02T00:00:00Z",
+      "updated_at": "2025-12-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "hotels.hotel",
+    "pk": 6,
+    "fields": {
+      "name": "Tambacounda Desert Lodge",
+      "description": "Lodge authentique en plein désert",
+      "city": "Tambacounda",
+      "address": "Route de Kayes, Tambacounda",
+      "phone": "+221 33 913 00 00",
+      "email": "lodge@tambacounda.sn",
+      "price_per_night": "75.00",
+      "rating": 4.3,
+      "rooms_count": 40,
+      "available_rooms": 12,
+      "is_active": true,
+      "created_at": "2025-12-02T00:00:00Z",
+      "updated_at": "2025-12-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "hotels.hotel",
+    "pk": 7,
+    "fields": {
+      "name": "Ziguinchor Eco-Hotel",
+      "description": "Hôtel écologique en Casamance",
+      "city": "Ziguinchor",
+      "address": "Avenue du Président Senghor, Ziguinchor",
+      "phone": "+221 33 991 00 00",
+      "email": "eco@ziguinchor.sn",
+      "price_per_night": "85.00",
+      "rating": 4.5,
+      "rooms_count": 55,
+      "available_rooms": 18,
+      "is_active": true,
+      "created_at": "2025-12-02T00:00:00Z",
+      "updated_at": "2025-12-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "hotels.hotel",
+    "pk": 8,
+    "fields": {
+      "name": "Kolda Heritage Hotel",
+      "description": "Hôtel traditionnel avec charme local",
+      "city": "Kolda",
+      "address": "Place de l'Indépendance, Kolda",
+      "phone": "+221 33 916 00 00",
+      "email": "heritage@kolda.sn",
+      "price_per_night": "70.00",
+      "rating": 4.2,
+      "rooms_count": 35,
+      "available_rooms": 10,
+      "is_active": true,
+      "created_at": "2025-12-02T00:00:00Z",
+      "updated_at": "2025-12-02T00:00:00Z"
+    }
+  }
+]
