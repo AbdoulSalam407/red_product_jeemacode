@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login, Signup, ForgotPassword, Dashboard, Hotels } from './pages';
 import { ProtectedRoute } from './routes/ProtectedRoute';
