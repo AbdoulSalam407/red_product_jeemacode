@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Trash2, Edit2 } from 'lucide-react';
 import { Button, Navbar, Sidebar } from '../components';
 import Swal from 'sweetalert2';
+import api from '../lib/api';
 
 let loadingAlert: any = null;
 
@@ -58,21 +59,9 @@ export const Tickets: React.FC = () => {
   const fetchTickets = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/tickets/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        // Gérer différents formats de réponse
-        const ticketsArray = Array.isArray(data) ? data : (data.results || data.data || []);
-        setTickets(ticketsArray);
-      } else {
-        setTickets([]);
-      }
+      const response = await api.get('/tickets/');
+      const ticketsArray = Array.isArray(response.data) ? response.data : (response.data.results || response.data.data || []);
+      setTickets(ticketsArray);
     } catch (error) {
       console.error('Erreur lors de la récupération des tickets:', error);
       setTickets([]);
@@ -93,33 +82,22 @@ export const Tickets: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('access_token');
-      const method = editingTicketId ? 'PUT' : 'POST';
-      const url = editingTicketId 
-        ? `http://localhost:8000/api/tickets/${editingTicketId}/`
-        : 'http://localhost:8000/api/tickets/';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Succès',
-          text: editingTicketId ? 'Ticket modifié avec succès' : 'Ticket créé avec succès',
-          timer: 1500,
-        });
-        setFormData({ title: '', description: '', priority: 'medium' });
-        setEditingTicketId(null);
-        setShowForm(false);
-        fetchTickets();
+      if (editingTicketId) {
+        await api.put(`/tickets/${editingTicketId}/`, formData);
+      } else {
+        await api.post('/tickets/', formData);
       }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Succès',
+        text: editingTicketId ? 'Ticket modifié avec succès' : 'Ticket créé avec succès',
+        timer: 1500,
+      });
+      setFormData({ title: '', description: '', priority: 'medium' });
+      setEditingTicketId(null);
+      setShowForm(false);
+      fetchTickets();
     } catch (error) {
       Swal.fire({
         icon: 'error',
@@ -151,23 +129,14 @@ export const Tickets: React.FC = () => {
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch(`http://localhost:8000/api/tickets/${id}/`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+        await api.delete(`/tickets/${id}/`);
+        Swal.fire({
+          icon: 'success',
+          title: 'Succès',
+          text: 'Ticket supprimé avec succès',
+          timer: 1500,
         });
-
-        if (response.ok) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Succès',
-            text: 'Ticket supprimé avec succès',
-            timer: 1500,
-          });
-          fetchTickets();
-        }
+        fetchTickets();
       } catch (error) {
         Swal.fire({
           icon: 'error',

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Send, Trash2, Search, CheckCircle } from 'lucide-react';
 import { Button, Navbar, Sidebar } from '../components';
 import Swal from 'sweetalert2';
+import api from '../lib/api';
 
 let loadingAlert: any = null;
 
@@ -53,20 +54,9 @@ export const Emails: React.FC = () => {
   const fetchEmails = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/emails/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const emailsArray = Array.isArray(data) ? data : (data.results || data.data || []);
-        setEmails(emailsArray);
-      } else {
-        setEmails([]);
-      }
+      const response = await api.get('/emails/');
+      const emailsArray = Array.isArray(response.data) ? response.data : (response.data.results || response.data.data || []);
+      setEmails(emailsArray);
     } catch (error) {
       console.error('Erreur lors de la récupération des emails:', error);
       setEmails([]);
@@ -105,35 +95,16 @@ export const Emails: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/emails/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      await api.post('/emails/', formData);
+      Swal.fire({
+        icon: 'success',
+        title: 'Succès',
+        text: 'Email créé avec succès',
+        timer: 1500,
       });
-
-      if (response.ok) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Succès',
-          text: 'Email créé avec succès',
-          timer: 1500,
-        });
-        setFormData({ recipient: '', subject: '', body: '' });
-        setShowForm(false);
-        fetchEmails();
-      } else {
-        const errorData = await response.json();
-        console.error('Erreur API:', errorData);
-        Swal.fire({
-          icon: 'error',
-          title: 'Erreur',
-          text: JSON.stringify(errorData),
-        });
-      }
+      setFormData({ recipient: '', subject: '', body: '' });
+      setShowForm(false);
+      fetchEmails();
     } catch (error) {
       console.error('Erreur lors de l\'envoi de l\'email:', error);
       Swal.fire({
@@ -156,23 +127,14 @@ export const Emails: React.FC = () => {
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch(`http://localhost:8000/api/emails/${id}/`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+        await api.delete(`/emails/${id}/`);
+        Swal.fire({
+          icon: 'success',
+          title: 'Succès',
+          text: 'Email supprimé avec succès',
+          timer: 1500,
         });
-
-        if (response.ok) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Succès',
-            text: 'Email supprimé avec succès',
-            timer: 1500,
-          });
-          fetchEmails();
-        }
+        fetchEmails();
       } catch (error) {
         Swal.fire({
           icon: 'error',

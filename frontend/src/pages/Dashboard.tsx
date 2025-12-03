@@ -4,6 +4,7 @@ import { BarChart3, Users, Hotel, TrendingUp, RefreshCw, Ticket, Mail, MessageSq
 import { useDashboard } from '../hooks/useDashboard';
 import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../lib/api';
 
 interface User {
   id: number;
@@ -53,47 +54,24 @@ export const Dashboard: React.FC = () => {
   }, [isLoading]);
 
   const fetchDashboardData = async () => {
-    const token = localStorage.getItem('access_token');
-    
     try {
       // Récupérer les tickets
-      const ticketsRes = await fetch('http://localhost:8000/api/tickets/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (ticketsRes.ok) {
-        const ticketsData = await ticketsRes.json();
-        const ticketsArray = Array.isArray(ticketsData) ? ticketsData : (ticketsData.results || ticketsData.data || []);
-        setTickets(ticketsArray.slice(0, 5));
-      }
+      const ticketsRes = await api.get('/tickets/');
+      const ticketsData = ticketsRes.data;
+      const ticketsArray = Array.isArray(ticketsData) ? ticketsData : (ticketsData.results || ticketsData.data || []);
+      setTickets(ticketsArray.slice(0, 5));
 
       // Récupérer les messages
-      const messagesRes = await fetch('http://localhost:8000/api/messages/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (messagesRes.ok) {
-        const messagesData = await messagesRes.json();
-        const messagesArray = Array.isArray(messagesData) ? messagesData : (messagesData.results || messagesData.data || []);
-        setMessages(messagesArray.slice(0, 5));
-      }
+      const messagesRes = await api.get('/messages/');
+      const messagesData = messagesRes.data;
+      const messagesArray = Array.isArray(messagesData) ? messagesData : (messagesData.results || messagesData.data || []);
+      setMessages(messagesArray.slice(0, 5));
 
       // Récupérer les emails
-      const emailsRes = await fetch('http://localhost:8000/api/emails/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (emailsRes.ok) {
-        const emailsData = await emailsRes.json();
-        const emailsArray = Array.isArray(emailsData) ? emailsData : (emailsData.results || emailsData.data || []);
-        setEmails(emailsArray.slice(0, 5));
-      }
+      const emailsRes = await api.get('/emails/');
+      const emailsData = emailsRes.data;
+      const emailsArray = Array.isArray(emailsData) ? emailsData : (emailsData.results || emailsData.data || []);
+      setEmails(emailsArray.slice(0, 5));
     } catch (error) {
       console.error('Erreur lors du chargement des données du dashboard:', error);
     }

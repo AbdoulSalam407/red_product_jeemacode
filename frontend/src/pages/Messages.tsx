@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Send, Trash2, Search } from 'lucide-react';
 import { Button, Navbar, Sidebar } from '../components';
 import Swal from 'sweetalert2';
+import api from '../lib/api';
 
 let loadingAlert: any = null;
 
@@ -80,20 +81,9 @@ export const Messages: React.FC = () => {
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/messages/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const messagesArray = Array.isArray(data) ? data : (data.results || data.data || []);
-        setMessages(messagesArray);
-      } else {
-        setMessages([]);
-      }
+      const response = await api.get('/messages/');
+      const messagesArray = Array.isArray(response.data) ? response.data : (response.data.results || response.data.data || []);
+      setMessages(messagesArray);
     } catch (error) {
       console.error('Erreur lors de la récupération des messages:', error);
       setMessages([]);
@@ -104,30 +94,20 @@ export const Messages: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/auth/users/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Users data:', data);
-        let usersArray = [];
-        
-        if (Array.isArray(data)) {
-          usersArray = data;
-        } else if (data.results) {
-          usersArray = data.results;
-        } else if (data.data) {
-          usersArray = data.data;
-        }
-        
-        setUsers(usersArray);
-      } else {
-        console.error('Erreur lors de la récupération des utilisateurs:', response.status);
+      const response = await api.get('/auth/users/');
+      const data = response.data;
+      console.log('Users data:', data);
+      let usersArray = [];
+      
+      if (Array.isArray(data)) {
+        usersArray = data;
+      } else if (data.results) {
+        usersArray = data.results;
+      } else if (data.data) {
+        usersArray = data.data;
       }
+      
+      setUsers(usersArray);
     } catch (error) {
       console.error('Erreur lors de la récupération des utilisateurs:', error);
     }
@@ -154,38 +134,20 @@ export const Messages: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/messages/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          recipient_id: parseInt(formData.recipient_id),
-          content: formData.content,
-        }),
+      await api.post('/messages/', {
+        recipient_id: parseInt(formData.recipient_id),
+        content: formData.content,
       });
 
-      if (response.ok) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Succès',
-          text: 'Message envoyé avec succès',
-          timer: 1500,
-        });
-        setFormData({ recipient_id: '', content: '' });
-        setShowForm(false);
-        fetchMessages();
-      } else {
-        const errorData = await response.json();
-        console.error('Erreur API:', errorData);
-        Swal.fire({
-          icon: 'error',
-          title: 'Erreur',
-          text: JSON.stringify(errorData),
-        });
-      }
+      Swal.fire({
+        icon: 'success',
+        title: 'Succès',
+        text: 'Message envoyé avec succès',
+        timer: 1500,
+      });
+      setFormData({ recipient_id: '', content: '' });
+      setShowForm(false);
+      fetchMessages();
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
       Swal.fire({
@@ -208,23 +170,14 @@ export const Messages: React.FC = () => {
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch(`http://localhost:8000/api/messages/${id}/`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+        await api.delete(`/messages/${id}/`);
+        Swal.fire({
+          icon: 'success',
+          title: 'Succès',
+          text: 'Message supprimé avec succès',
+          timer: 1500,
         });
-
-        if (response.ok) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Succès',
-            text: 'Message supprimé avec succès',
-            timer: 1500,
-          });
-          fetchMessages();
-        }
+        fetchMessages();
       } catch (error) {
         Swal.fire({
           icon: 'error',
