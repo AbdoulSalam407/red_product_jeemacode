@@ -29,6 +29,23 @@ export const Signup: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Prénom"
+              type="text"
+              placeholder="Jean"
+              {...register('firstName')}
+              error={errors.firstName}
+            />
+            <Input
+              label="Nom"
+              type="text"
+              placeholder="Dupont"
+              {...register('lastName')}
+              error={errors.lastName}
+            />
+          </div>
+
           <Input
             label="Email"
             type="email"

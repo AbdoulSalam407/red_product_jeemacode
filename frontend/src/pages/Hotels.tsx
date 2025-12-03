@@ -1,15 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { Navbar, Sidebar, Card, Button, HotelModal } from '../components';
 import { Search, Plus, MapPin, DollarSign, Star, Edit, Trash2 } from 'lucide-react';
 import { useHotels } from '../hooks/useHotels';
 
 export const Hotels: React.FC = () => {
-  const { hotels, createHotel, updateHotel, deleteHotel } = useHotels();
+  const { hotels, isLoading, createHotel, updateHotel, deleteHotel } = useHotels();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Afficher/masquer l'alerte de chargement
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: 'Chargement des hôtels',
+        html: 'Veuillez patienter...',
+        icon: 'info',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   // Filtrer les hôtels localement aussi
   const filteredHotels = hotels.filter(hotel =>
@@ -59,34 +77,34 @@ export const Hotels: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 flex-col md:flex-row">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
-        <main className="flex-1 overflow-auto p-8">
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Hôtels</h1>
-              <Button variant="primary" size="lg" onClick={handleAddHotel}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Hôtels</h1>
+              <Button variant="primary" size="lg" onClick={handleAddHotel} className="w-full sm:w-auto">
                 <Plus size={20} className="mr-2" />
                 Ajouter un hôtel
               </Button>
             </div>
 
-            <Card className="mb-8">
+            <Card className="mb-6 sm:mb-8">
               <div className="flex items-center space-x-2">
-                <Search size={20} className="text-gray-400" />
+                <Search size={20} className="text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
                   placeholder="Rechercher un hôtel ou une ville..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 outline-none bg-transparent"
+                  className="flex-1 outline-none bg-transparent min-w-0"
                 />
               </div>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredHotels.map((hotel) => (
                 <Card key={hotel.id} className="overflow-hidden hover:shadow-lg transition flex flex-col">
                   <div className="w-full h-40 bg-gradient-to-br from-primary to-secondary flex items-center justify-center overflow-hidden">

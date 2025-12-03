@@ -18,6 +18,7 @@ export const authService = {
     const data = response.data;
     localStorage.setItem('access_token', data.access);
     localStorage.setItem('refresh_token', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
     return data;
   },
 
@@ -26,12 +27,13 @@ export const authService = {
       email: credentials.email,
       password: credentials.password,
       password2: credentials.confirmPassword,
-      first_name: '',
-      last_name: '',
+      first_name: credentials.firstName,
+      last_name: credentials.lastName,
     });
     const data = response.data;
     localStorage.setItem('access_token', data.access);
     localStorage.setItem('refresh_token', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
     return data;
   },
 

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Login, Signup, ForgotPassword, Dashboard, Hotels } from './pages';
+import { Login, Signup, ForgotPassword, Dashboard, Hotels, Tickets, Messages, Emails } from './pages';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 function App() {
@@ -22,6 +22,30 @@ function App() {
           element={
             <ProtectedRoute>
               <Hotels />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets"
+          element={
+            <ProtectedRoute>
+              <Tickets />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <Messages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/emails"
+          element={
+            <ProtectedRoute>
+              <Emails />
             </ProtectedRoute>
           }
         />
