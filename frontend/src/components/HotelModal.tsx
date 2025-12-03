@@ -98,10 +98,19 @@ export const HotelModal: React.FC<HotelModalProps> = ({
   };
 
   const handleFormSubmit = async (data: any) => {
+    // Convertir les nombres en types corrects
+    const formData = {
+      ...data,
+      price_per_night: parseFloat(data.price_per_night),
+      rating: parseFloat(data.rating),
+      rooms_count: parseInt(data.rooms_count),
+      available_rooms: parseInt(data.available_rooms),
+    };
+    
     if (selectedImage) {
-      data.image = selectedImage;
+      formData.image = selectedImage;
     }
-    await onSubmit(data);
+    await onSubmit(formData);
     handleClose();
   };
 

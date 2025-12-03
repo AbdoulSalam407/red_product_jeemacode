@@ -68,17 +68,22 @@ export const useHotels = () => {
   // Créer un hôtel
   const createHotel = useCallback(async (data: Omit<Hotel, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = (data as any)[key];
-        if (value !== undefined && value !== null) {
-          formData.append(key, value);
-        }
-      });
+      const payload = { ...data };
+      
+      // Convertir File en base64 si nécessaire
+      if (payload.image instanceof File) {
+        const reader = new FileReader();
+        await new Promise((resolve, reject) => {
+          reader.onload = () => {
+            payload.image = reader.result as string;
+            resolve(null);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(payload.image as File);
+        });
+      }
 
-      const response = await api.post('/hotels/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.post('/hotels/', payload);
       setHotels([...hotels, response.data]);
       Swal.fire({
         icon: 'success',
@@ -101,17 +106,22 @@ export const useHotels = () => {
   // Mettre à jour un hôtel
   const updateHotel = useCallback(async (id: number, data: Partial<Hotel>) => {
     try {
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        const value = (data as any)[key];
-        if (value !== undefined && value !== null) {
-          formData.append(key, value);
-        }
-      });
+      const payload = { ...data };
+      
+      // Convertir File en base64 si nécessaire
+      if (payload.image instanceof File) {
+        const reader = new FileReader();
+        await new Promise((resolve, reject) => {
+          reader.onload = () => {
+            payload.image = reader.result as string;
+            resolve(null);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(payload.image as File);
+        });
+      }
 
-      const response = await api.put(`/hotels/${id}/`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.put(`/hotels/${id}/`, payload);
       setHotels(hotels.map(h => h.id === id ? response.data : h));
       Swal.fire({
         icon: 'success',
