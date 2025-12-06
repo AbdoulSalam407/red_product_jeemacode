@@ -55,7 +55,7 @@ export const useDashboard = () => {
     // Rafraîchir les stats toutes les 30 secondes
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
-  }, [fetchStats]);
+  }, []);
 
   return { stats, isLoading, error, refetch: fetchStats };
 };

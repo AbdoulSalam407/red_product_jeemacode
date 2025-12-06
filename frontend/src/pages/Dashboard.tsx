@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar, Sidebar, Card } from '../components';
 import { BarChart3, Users, Hotel, TrendingUp, RefreshCw, Ticket, Mail, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
 import { useDashboard } from '../hooks/useDashboard';
@@ -30,7 +30,9 @@ export const Dashboard: React.FC = () => {
         console.error('Erreur lors de la récupération des données utilisateur:', err);
       }
     }
-    
+  }, []);
+
+  useEffect(() => {
     // Charger les tickets, messages et emails
     fetchDashboardData();
   }, []);
@@ -53,29 +55,33 @@ export const Dashboard: React.FC = () => {
     }
   }, [isLoading]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
-      // Récupérer les tickets
-      const ticketsRes = await api.get('/tickets/');
+      // Faire tous les appels en parallèle
+      const [ticketsRes, messagesRes, emailsRes] = await Promise.all([
+        api.get('/tickets/'),
+        api.get('/messages/'),
+        api.get('/emails/'),
+      ]);
+
+      // Traiter les tickets
       const ticketsData = ticketsRes.data;
       const ticketsArray = Array.isArray(ticketsData) ? ticketsData : (ticketsData.results || ticketsData.data || []);
       setTickets(ticketsArray.slice(0, 5));
 
-      // Récupérer les messages
-      const messagesRes = await api.get('/messages/');
+      // Traiter les messages
       const messagesData = messagesRes.data;
       const messagesArray = Array.isArray(messagesData) ? messagesData : (messagesData.results || messagesData.data || []);
       setMessages(messagesArray.slice(0, 5));
 
-      // Récupérer les emails
-      const emailsRes = await api.get('/emails/');
+      // Traiter les emails
       const emailsData = emailsRes.data;
       const emailsArray = Array.isArray(emailsData) ? emailsData : (emailsData.results || emailsData.data || []);
       setEmails(emailsArray.slice(0, 5));
     } catch (error) {
       console.error('Erreur lors du chargement des données du dashboard:', error);
     }
-  };
+  }, []);
 
   const statCards = [
     { label: 'Hôtels', value: stats.totalHotels, icon: Hotel, color: 'bg-blue-500' },
