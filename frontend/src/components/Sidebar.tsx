@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Hotel, Ticket, MessageSquare, Mail, LogOut, Menu, X } from 'lucide-react';
 
 interface User {
@@ -11,6 +11,7 @@ interface User {
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -38,7 +39,7 @@ export const Sidebar: React.FC = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   const getInitials = () => {
