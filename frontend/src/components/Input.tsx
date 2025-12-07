@@ -12,22 +12,22 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs font-medium text-gray-700 mb-0.5">
             {label}
           </label>
         )}
         <div className="relative">
-          {icon && <div className="absolute left-3 top-3 text-gray-400">{icon}</div>}
+          {icon && <div className="absolute left-3 top-2 text-gray-400">{icon}</div>}
           <input
             ref={ref}
-            className={`input-field ${icon ? 'pl-10' : ''} ${
+            className={`input-field text-xs px-2 py-1 ${icon ? 'pl-8' : ''} ${
               error ? 'border-red-500 focus:ring-red-500' : ''
             } ${className}`}
             {...props}
           />
         </div>
         {error && (
-          <p className="text-red-500 text-sm mt-1">{error.message}</p>
+          <p className="text-red-500 text-xs mt-0.5">{error.message}</p>
         )}
       </div>
     );

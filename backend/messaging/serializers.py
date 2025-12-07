@@ -24,3 +24,12 @@ class MessageSerializer(serializers.ModelSerializer):
         if recipient_id:
             validated_data['recipient_id'] = recipient_id
         return super().create(validated_data)
+    
+    def validate_recipient_id(self, value):
+        """Vérifier que le destinataire existe"""
+        if value:
+            try:
+                User.objects.get(id=value)
+            except User.DoesNotExist:
+                raise serializers.ValidationError("Le destinataire n'existe pas")
+        return value

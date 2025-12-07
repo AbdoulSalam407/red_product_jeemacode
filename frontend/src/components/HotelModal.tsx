@@ -146,25 +146,25 @@ export const HotelModal: React.FC<HotelModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 my-8">
-        <div className="sticky top-0 flex justify-between items-center p-6 border-b bg-white">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {initialData ? 'Modifier l\'hôtel' : 'Ajouter un hôtel'}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto p-1">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-2 max-h-[96vh] flex flex-col">
+        <div className="flex justify-between items-center px-3 py-2 border-b bg-white flex-shrink-0">
+          <h2 className="text-lg font-bold text-gray-900">
+            {initialData ? 'Modifier' : 'Ajouter'}
           </h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600"
           >
-            <X size={24} />
+            <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-4 max-h-[calc(90vh-140px)] overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-3 space-y-1 overflow-y-auto flex-1">
+          <div className="grid grid-cols-2 gap-1">
             <Input
               label="Nom"
-              placeholder="Nom de l'hôtel"
+              placeholder="Nom"
               {...register('name', { required: initialData ? false : 'Le nom est requis' })}
               error={errors.name}
             />
@@ -176,18 +176,18 @@ export const HotelModal: React.FC<HotelModalProps> = ({
             />
           </div>
 
-          <Input
-            label="Description"
-            placeholder="Description de l'hôtel"
+          <textarea
+            placeholder="Description"
             {...register('description')}
-            error={errors.description}
+            rows={1}
+            className="w-full px-2 py-1 border border-gray-300 rounded text-xs resize-none"
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Image de l'hôtel
+            <label className="block text-xs font-medium text-gray-700 mb-0.5">
+              Image
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition cursor-pointer">
+            <div className="border-2 border-dashed border-gray-300 rounded p-1 text-center hover:border-primary transition cursor-pointer">
               <input
                 type="file"
                 accept="image/*"
@@ -198,19 +198,18 @@ export const HotelModal: React.FC<HotelModalProps> = ({
               <label htmlFor="hotel-image" className="cursor-pointer">
                 {imagePreview ? (
                   <div>
-                    <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover rounded mb-2" />
-                    <p className="text-sm text-primary">Cliquer pour changer l'image</p>
+                    <img src={imagePreview} alt="Preview" className="w-full h-12 object-cover rounded mb-0.5" />
+                    <p className="text-xs text-primary">Changer</p>
                   </div>
                 ) : initialData?.image ? (
                   <div>
-                    <img src={initialData.image as string} alt="Current" className="w-full h-40 object-cover rounded mb-2" />
-                    <p className="text-sm text-primary">Cliquer pour changer l'image</p>
+                    <img src={initialData.image as string} alt="Current" className="w-full h-12 object-cover rounded mb-0.5" />
+                    <p className="text-xs text-primary">Changer</p>
                   </div>
                 ) : (
                   <div>
-                    <Upload size={32} className="mx-auto text-gray-400 mb-2" />
-                    <p className="text-gray-600">Cliquer pour ajouter une image</p>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF jusqu'à 10MB</p>
+                    <Upload size={14} className="mx-auto text-gray-400 mb-0.5" />
+                    <p className="text-xs text-gray-600">Ajouter</p>
                   </div>
                 )}
               </label>
@@ -219,14 +218,14 @@ export const HotelModal: React.FC<HotelModalProps> = ({
 
           <Input
             label="Adresse"
-            placeholder="Adresse complète"
+            placeholder="Adresse"
             {...register('address', { required: initialData ? false : 'L\'adresse est requise' })}
             error={errors.address}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-1">
             <Input
-              label="Téléphone"
+              label="Tél"
               placeholder="+221 33 XXX XX XX"
               {...register('phone')}
               error={errors.phone}
@@ -240,9 +239,9 @@ export const HotelModal: React.FC<HotelModalProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-1">
             <Input
-              label="Prix par nuit (XOF)"
+              label="Prix"
               type="number"
               placeholder="15000"
               step="100"
@@ -253,7 +252,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
               error={errors.price_per_night}
             />
             <Input
-              label="Note (0-5)"
+              label="Note"
               type="number"
               placeholder="4.5"
               step="0.1"
@@ -268,9 +267,9 @@ export const HotelModal: React.FC<HotelModalProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-1">
             <Input
-              label="Nombre total de chambres"
+              label="Chambres"
               type="number"
               placeholder="120"
               {...register('rooms_count', { 
@@ -280,7 +279,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
               error={errors.rooms_count}
             />
             <Input
-              label="Chambres disponibles"
+              label="Dispo"
               type="number"
               placeholder="45"
               {...register('available_rooms', { 
@@ -291,31 +290,35 @@ export const HotelModal: React.FC<HotelModalProps> = ({
             />
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             <input
               type="checkbox"
               id="is_active"
               {...register('is_active')}
-              className="w-4 h-4 rounded border-gray-300"
+              className="w-3 h-3 rounded border-gray-300"
             />
-            <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
-              Hôtel actif
+            <label htmlFor="is_active" className="text-xs font-medium text-gray-700">
+              Actif
             </label>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-6 border-t">
+          <div className="flex justify-end space-x-1 pt-1 border-t">
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={handleClose}
               disabled={isLoading}
+              className="text-xs px-2 py-1"
             >
               Annuler
             </Button>
             <Button
               type="submit"
               variant="primary"
+              size="sm"
               isLoading={isLoading}
+              className="text-xs px-2 py-1"
             >
               {initialData ? 'Mettre à jour' : 'Créer'}
             </Button>

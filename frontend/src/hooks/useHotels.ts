@@ -30,7 +30,7 @@ export interface HotelFilters {
 
 const CACHE_KEY = 'hotels_cache';
 const CACHE_TIME_KEY = 'hotels_cache_time';
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
 
 export const useHotels = () => {
   // Charger les données en cache au démarrage
@@ -114,6 +114,9 @@ export const useHotels = () => {
 
   // Créer un hôtel
   const createHotel = useCallback(async (data: Omit<Hotel, 'id' | 'created_at' | 'updated_at'>) => {
+    // ✅ SAUVEGARDER L'ID OPTIMISTE
+    const optimisticId = -Math.random();
+    
     try {
       const formData = new FormData();
       
@@ -129,7 +132,7 @@ export const useHotels = () => {
 
       // Créer un nouvel hôtel optimiste avec un ID temporaire
       const optimisticHotel: Hotel = {
-        id: -Math.random(), // ID temporaire négatif
+        id: optimisticId, // ✅ Utiliser la variable
         ...data,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -143,7 +146,10 @@ export const useHotels = () => {
       const response = await api.post('/hotels/', formData);
       
       // Remplacer l'hôtel optimiste par la réponse réelle du serveur
-      setHotels(prev => prev.map(h => h.id === optimisticHotel.id ? response.data : h));
+      setHotels(prev => prev.map(h => h.id === optimisticId ? response.data : h));
+      
+      // ✅ AJOUTER: Recharger les données après succès
+      await fetchHotels(true); // skipCache = true
       
       // Afficher l'alerte de succès (sans bloquer avec await)
       Swal.fire({
@@ -164,8 +170,8 @@ export const useHotels = () => {
         }
       });
     } catch (err: any) {
-      // Annuler l'optimistic update en cas d'erreur
-      setHotels(prev => prev.filter(h => h.id !== (err.optimisticId || -1)));
+      // ✅ CORRIGER: Utiliser optimisticId au lieu de err.optimisticId
+      setHotels(prev => prev.filter(h => h.id !== optimisticId));
       
       const message = err.response?.data?.detail || err.message || 'Erreur lors de la création';
       const errorDetails = err.response?.data || {};
@@ -183,7 +189,7 @@ export const useHotels = () => {
       });
       throw err;
     }
-  }, [invalidateCache]);
+  }, [invalidateCache, fetchHotels]);
 
   // Mettre à jour un hôtel
   const updateHotel = useCallback(async (id: number, data: Partial<Hotel>) => {
@@ -195,10 +201,14 @@ export const useHotels = () => {
       // Marquer l'hôtel comme en cours de synchronisation
       setSyncingHotelIds(prev => new Set([...prev, id]));
       
+      // ✅ NE PAS inclure l'image dans l'optimistic update (elle sera reçue du serveur)
+      const dataWithoutImage = { ...data };
+      delete dataWithoutImage.image;
+      
       // Mettre à jour l'état immédiatement (optimistic update)
       setHotels(prev => prev.map(h => 
         h.id === id 
-          ? { ...h, ...data, updated_at: new Date().toISOString() }
+          ? { ...h, ...dataWithoutImage, updated_at: new Date().toISOString() }
           : h
       ));
       invalidateCache();
@@ -219,7 +229,10 @@ export const useHotels = () => {
           }
         });
 
-        await api.patch(`/hotels/${id}/`, formData);
+        const response = await api.patch(`/hotels/${id}/`, formData);
+        
+        // ✅ METTRE À JOUR avec la réponse du serveur (qui inclut l'image)
+        setHotels(prev => prev.map(h => h.id === id ? response.data : h));
       } else {
         // Utiliser JSON pour les autres champs
         const payload: any = {};
@@ -229,7 +242,10 @@ export const useHotels = () => {
           }
         });
         
-        await api.patch(`/hotels/${id}/`, payload);
+        const response = await api.patch(`/hotels/${id}/`, payload);
+        
+        // ✅ METTRE À JOUR avec la réponse du serveur
+        setHotels(prev => prev.map(h => h.id === id ? response.data : h));
       }
       
       Swal.fire({

@@ -71,6 +71,16 @@ DATABASES = {
         'PASSWORD': config('DATABASE_PASSWORD', default=''),
         'HOST': config('DATABASE_HOST', default='localhost'),
         'PORT': config('DATABASE_PORT', default='5432'),
+        
+        # ✅ CONNECTION POOLING
+        'CONN_MAX_AGE': 600,
+        'ATOMIC_REQUESTS': False,
+        'AUTOCOMMIT': True,
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c statement_timeout=30000',
+            'sslmode': 'require',
+        }
     }
 }
 
@@ -105,7 +115,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 50,
 }
 
 SIMPLE_JWT = {

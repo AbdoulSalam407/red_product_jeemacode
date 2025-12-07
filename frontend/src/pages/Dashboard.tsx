@@ -166,7 +166,7 @@ export const Dashboard: React.FC = () => {
                 Bienvenue, {user ? `${user.first_name} ${user.last_name}`.trim() || user.email : 'Utilisateur'} ! 👋
               </h1>
               <p className="text-sm sm:text-base lg:text-lg opacity-90">
-                Vous avez {tickets.length} ticket(s), {messages.length} message(s) et {emails.length} email(s) en attente.
+                Vous avez {stats.totalTickets} ticket(s), {stats.totalMessages} message(s) et {stats.totalEmails} email(s) en attente.
               </p>
             </div>
 

@@ -38,7 +38,11 @@ export const Messages: React.FC = () => {
   const cachedMessages = localStorage.getItem('messages_cache');
   const [messages, setMessages] = useState<Message[]>(cachedMessages ? JSON.parse(cachedMessages) : []);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(!cachedMessages);
+  // ✅ CORRIGER: Toujours charger si pas de cache valide
+  const cacheTime = localStorage.getItem('messages_cache_time');
+  const now = Date.now();
+  const isCacheValid = cacheTime && (now - parseInt(cacheTime)) < 2 * 60 * 1000;
+  const [isLoading, setIsLoading] = useState(!isCacheValid);
   const [showForm, setShowForm] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -82,28 +86,29 @@ export const Messages: React.FC = () => {
 
   const fetchMessages = async () => {
     try {
-      const cacheKey = 'messages_cache';
-      const cacheTime = localStorage.getItem(cacheKey + '_time');
-      const now = Date.now();
-      
-      // Utiliser le cache si disponible et moins de 5 minutes
-      if (cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
-        const cachedData = localStorage.getItem(cacheKey);
-        if (cachedData) {
-          setMessages(JSON.parse(cachedData));
-          setIsLoading(false);
-          return;
-        }
-      }
-
       setIsLoading(true);
       const response = await api.get('/messages/');
-      const messagesArray = Array.isArray(response.data) ? response.data : (response.data.results || response.data.data || []);
+      console.log('Messages response:', response.data); // Debug
+      
+      // Gérer la pagination Django REST Framework
+      let messagesArray: Message[] = [];
+      if (Array.isArray(response.data)) {
+        messagesArray = response.data;
+      } else if (response.data.results && Array.isArray(response.data.results)) {
+        messagesArray = response.data.results;
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        messagesArray = response.data.data;
+      }
+      
+      console.log('Messages array:', messagesArray); // Debug
+      console.log('Messages count:', messagesArray.length); // Debug
+      
       setMessages(messagesArray);
       
       // Mettre en cache les données
+      const cacheKey = 'messages_cache';
       localStorage.setItem(cacheKey, JSON.stringify(messagesArray));
-      localStorage.setItem(cacheKey + '_time', now.toString());
+      localStorage.setItem(cacheKey + '_time', Date.now().toString());
     } catch (error) {
       console.error('Erreur lors de la récupération des messages:', error);
       setMessages([]);
@@ -153,27 +158,65 @@ export const Messages: React.FC = () => {
       return;
     }
 
+    // ✅ Créer un message optimiste
+    const optimisticId = -Math.random();
+    const recipientId = parseInt(formData.recipient_id);
+    const recipient = users.find(u => u.id === recipientId);
+
+    const optimisticMessage: Message = {
+      id: optimisticId,
+      sender: currentUser!,
+      recipient: recipient!,
+      content: formData.content,
+      is_read: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
     try {
-      await api.post('/messages/', {
-        recipient_id: parseInt(formData.recipient_id),
+      // ✅ Ajouter le message optimiste immédiatement
+      setMessages(prev => [optimisticMessage, ...prev]);
+      
+      // ✅ Invalider le cache
+      localStorage.removeItem('messages_cache');
+      localStorage.removeItem('messages_cache_time');
+
+      // Envoyer la requête en arrière-plan
+      const response = await api.post('/messages/', {
+        recipient_id: recipientId,
         content: formData.content,
       });
 
+      // ✅ Remplacer le message optimiste par la vraie réponse
+      setMessages(prev => prev.map(m => m.id === optimisticId ? response.data : m));
+
       Swal.fire({
         icon: 'success',
-        title: 'Succès',
-        text: 'Message envoyé avec succès',
-        timer: 1500,
+        title: '✅ Message envoyé',
+        text: 'Votre message a été envoyé avec succès',
+        timer: 2000,
+        timerProgressBar: true,
       });
+      
       setFormData({ recipient_id: '', content: '' });
       setShowForm(false);
-      fetchMessages();
-    } catch (error) {
+    } catch (error: any) {
+      // ✅ Rollback en cas d'erreur
+      setMessages(prev => prev.filter(m => m.id !== optimisticId));
+      
       console.error('Erreur lors de l\'envoi du message:', error);
+      const message = error.response?.data?.detail || 'Erreur lors de l\'envoi du message';
+      const errorDetails = error.response?.data || {};
+      
       Swal.fire({
         icon: 'error',
-        title: 'Erreur',
-        text: 'Erreur lors de l\'envoi du message',
+        title: '❌ Erreur d\'envoi',
+        html: `<div style="text-align: left;">
+          <p><strong>Message:</strong> ${message}</p>
+          ${Object.keys(errorDetails).length > 0 ? `<p><strong>Détails:</strong></p><pre style="text-align: left; background: #f3f4f6; padding: 10px; border-radius: 5px; overflow-x: auto;">${JSON.stringify(errorDetails, null, 2)}</pre>` : ''}
+        </div>`,
+        confirmButtonText: 'Réessayer',
+        confirmButtonColor: '#ef4444',
       });
     }
   };
@@ -189,20 +232,39 @@ export const Messages: React.FC = () => {
     });
 
     if (result.isConfirmed) {
+      // ✅ Sauvegarder l'état précédent
+      const previousMessages = messages;
+
       try {
+        // ✅ Supprimer le message immédiatement
+        setMessages(prev => prev.filter(m => m.id !== id));
+        
+        // ✅ Invalider le cache
+        localStorage.removeItem('messages_cache');
+        localStorage.removeItem('messages_cache_time');
+
+        // Envoyer la requête en arrière-plan
         await api.delete(`/messages/${id}/`);
+
         Swal.fire({
           icon: 'success',
-          title: 'Succès',
-          text: 'Message supprimé avec succès',
+          title: '✅ Message supprimé',
+          text: 'Le message a été supprimé avec succès',
           timer: 1500,
+          timerProgressBar: true,
         });
-        fetchMessages();
-      } catch (error) {
+      } catch (error: any) {
+        // ✅ Restaurer l'état précédent en cas d'erreur
+        setMessages(previousMessages);
+
+        console.error('Erreur lors de la suppression:', error);
+        const message = error.response?.data?.detail || 'Erreur lors de la suppression du message';
+        
         Swal.fire({
           icon: 'error',
-          title: 'Erreur',
-          text: 'Erreur lors de la suppression du message',
+          title: '❌ Erreur de suppression',
+          text: message,
+          confirmButtonColor: '#ef4444',
         });
       }
     }
@@ -239,9 +301,9 @@ export const Messages: React.FC = () => {
             </div>
 
             {showForm && (
-              <form onSubmit={handleSendMessage} className="bg-gray-50 p-4 rounded-lg mb-6 space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Envoyer un nouveau message
+              <form onSubmit={handleSendMessage} className="bg-gray-50 p-4 rounded-lg mb-6 space-y-3">
+                <h3 className="text-base font-semibold text-gray-900 mb-3">
+                  Envoyer un message
                 </h3>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -250,7 +312,7 @@ export const Messages: React.FC = () => {
                   <select
                     value={formData.recipient_id}
                     onChange={(e) => setFormData({ ...formData, recipient_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   >
                     <option value="">
                       {users.length === 0 ? 'Aucun utilisateur disponible' : 'Sélectionner un destinataire'}
@@ -273,8 +335,8 @@ export const Messages: React.FC = () => {
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     placeholder="Écrivez votre message..."
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
                   />
                 </div>
 
