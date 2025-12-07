@@ -5,7 +5,7 @@ import { Search, Plus, MapPin, DollarSign, Star, Edit, Trash2 } from 'lucide-rea
 import { useHotels } from '../hooks/useHotels';
 
 export const Hotels: React.FC = () => {
-  const { hotels, isLoading, createHotel, updateHotel, deleteHotel } = useHotels();
+  const { hotels, isLoading, createHotel, updateHotel, deleteHotel, syncingHotelIds } = useHotels();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState<any>(null);
@@ -71,6 +71,11 @@ export const Hotels: React.FC = () => {
       } else {
         await createHotel(data);
       }
+      // Fermer le modal immédiatement (l'alerte s'affiche en arrière-plan)
+      setIsModalOpen(false);
+    } catch (error) {
+      // L'erreur est déjà gérée dans useHotels avec SweetAlert
+      console.error('Erreur lors de la soumission:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,18 +110,39 @@ export const Hotels: React.FC = () => {
             </Card>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredHotels.map((hotel) => (
-                <Card key={hotel.id} className="overflow-hidden hover:shadow-lg transition flex flex-col">
+              {filteredHotels.map((hotel) => {
+                const isSyncing = syncingHotelIds.has(hotel.id);
+                return (
+                <Card key={hotel.id} className={`overflow-hidden hover:shadow-lg transition flex flex-col relative ${isSyncing ? 'opacity-60 pointer-events-none' : ''}`}>
+                  {isSyncing && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 z-10">
+                      <div className="animate-spin">
+                        <div className="w-8 h-8 border-4 border-white border-t-primary rounded-full"></div>
+                      </div>
+                    </div>
+                  )}
                   <div className="w-full h-40 bg-gradient-to-br from-primary to-secondary flex items-center justify-center overflow-hidden">
                     {hotel.image ? (
                       <img 
-                        src={hotel.image as string} 
+                        src={typeof hotel.image === 'string' && (hotel.image.startsWith('data:') || hotel.image.startsWith('http') || hotel.image.startsWith('/'))
+                          ? hotel.image 
+                          : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/media/${hotel.image}`
+                        }
                         alt={hotel.name}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          // Si l'image ne charge pas, afficher la première lettre
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
                       />
                     ) : (
                       <span className="text-white text-4xl font-bold">{hotel.name.charAt(0)}</span>
                     )}
+                    {!hotel.image || (hotel.image && typeof hotel.image === 'string' && !hotel.image.startsWith('data:') && !hotel.image.startsWith('http') && !hotel.image.startsWith('/')) ? (
+                      <span className="text-white text-4xl font-bold">{hotel.name.charAt(0)}</span>
+                    ) : null}
                   </div>
                   <div className="p-4 flex-1 flex flex-col">
                     <h3 className="text-lg font-bold text-gray-900">{hotel.name}</h3>
@@ -159,7 +185,8 @@ export const Hotels: React.FC = () => {
                     </div>
                   </div>
                 </Card>
-              ))}
+                );
+              })}
             </div>
 
             {filteredHotels.length === 0 && (

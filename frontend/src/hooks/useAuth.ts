@@ -12,6 +12,21 @@ export const useAuth = () => {
     setIsLoading(true);
     try {
       await authService.login(credentials);
+      
+      // Nettoyer le cache à la connexion
+      localStorage.removeItem('hotels_cache');
+      localStorage.removeItem('hotels_cache_time');
+      localStorage.removeItem('dashboard_cache');
+      localStorage.removeItem('dashboard_cache_time');
+      localStorage.removeItem('dashboard_data_cache');
+      localStorage.removeItem('dashboard_data_cache_time');
+      localStorage.removeItem('tickets_cache');
+      localStorage.removeItem('tickets_cache_time');
+      localStorage.removeItem('messages_cache');
+      localStorage.removeItem('messages_cache_time');
+      localStorage.removeItem('emails_cache');
+      localStorage.removeItem('emails_cache_time');
+      
       Swal.fire({
         icon: 'success',
         title: 'Connexion réussie',
@@ -34,6 +49,21 @@ export const useAuth = () => {
     setIsLoading(true);
     try {
       await authService.signup(credentials);
+      
+      // Nettoyer le cache à l'inscription
+      localStorage.removeItem('hotels_cache');
+      localStorage.removeItem('hotels_cache_time');
+      localStorage.removeItem('dashboard_cache');
+      localStorage.removeItem('dashboard_cache_time');
+      localStorage.removeItem('dashboard_data_cache');
+      localStorage.removeItem('dashboard_data_cache_time');
+      localStorage.removeItem('tickets_cache');
+      localStorage.removeItem('tickets_cache_time');
+      localStorage.removeItem('messages_cache');
+      localStorage.removeItem('messages_cache_time');
+      localStorage.removeItem('emails_cache');
+      localStorage.removeItem('emails_cache_time');
+      
       Swal.fire({
         icon: 'success',
         title: 'Inscription réussie',
@@ -74,6 +104,20 @@ export const useAuth = () => {
   }, [navigate]);
 
   const logout = useCallback(() => {
+    // Nettoyer le cache à la déconnexion
+    localStorage.removeItem('hotels_cache');
+    localStorage.removeItem('hotels_cache_time');
+    localStorage.removeItem('dashboard_cache');
+    localStorage.removeItem('dashboard_cache_time');
+    localStorage.removeItem('dashboard_data_cache');
+    localStorage.removeItem('dashboard_data_cache_time');
+    localStorage.removeItem('tickets_cache');
+    localStorage.removeItem('tickets_cache_time');
+    localStorage.removeItem('messages_cache');
+    localStorage.removeItem('messages_cache_time');
+    localStorage.removeItem('emails_cache');
+    localStorage.removeItem('emails_cache_time');
+    
     authService.logout();
     navigate('/login');
   }, [navigate]);

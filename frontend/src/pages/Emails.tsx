@@ -17,9 +17,11 @@ interface Email {
 }
 
 export const Emails: React.FC = () => {
-  const [emails, setEmails] = useState<Email[]>([]);
+  // Charger les données en cache au démarrage
+  const cachedEmails = localStorage.getItem('emails_cache');
+  const [emails, setEmails] = useState<Email[]>(cachedEmails ? JSON.parse(cachedEmails) : []);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!cachedEmails);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     recipient: '',
@@ -52,11 +54,29 @@ export const Emails: React.FC = () => {
   }, [isLoading]);
 
   const fetchEmails = async () => {
-    setIsLoading(true);
     try {
+      const cacheKey = 'emails_cache';
+      const cacheTime = localStorage.getItem(cacheKey + '_time');
+      const now = Date.now();
+      
+      // Utiliser le cache si disponible et moins de 5 minutes
+      if (cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+          setEmails(JSON.parse(cachedData));
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      setIsLoading(true);
       const response = await api.get('/emails/');
       const emailsArray = Array.isArray(response.data) ? response.data : (response.data.results || response.data.data || []);
       setEmails(emailsArray);
+      
+      // Mettre en cache les données
+      localStorage.setItem(cacheKey, JSON.stringify(emailsArray));
+      localStorage.setItem(cacheKey + '_time', now.toString());
     } catch (error) {
       console.error('Erreur lors de la récupération des emails:', error);
       setEmails([]);

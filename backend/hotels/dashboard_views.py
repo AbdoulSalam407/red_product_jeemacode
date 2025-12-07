@@ -3,12 +3,18 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.db.models import Count, Sum, F, Value
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import decorator_from_middleware_with_args
 from datetime import timedelta
 from .models import Hotel
 from users.models import CustomUser
+from tickets.models import Ticket
+from messaging.models import Message
+from emails.models import Email
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # Garder l'authentification requise
+@cache_page(60 * 5)  # Cache 5 minutes
 def dashboard_stats(request):
     """Retourne les statistiques du dashboard"""
     
@@ -57,11 +63,19 @@ def dashboard_stats(request):
     # Calculer le nombre total de réservations (nombre de chambres disponibles)
     total_reservations = Hotel.objects.aggregate(Sum('available_rooms'))['available_rooms__sum'] or 0
     
+    # Compter les tickets, messages et emails
+    total_tickets = Ticket.objects.count()
+    total_messages = Message.objects.count()
+    total_emails = Email.objects.count()
+    
     return Response({
         'totalHotels': total_hotels,
         'totalUsers': total_users,
         'totalReservations': int(total_reservations),
         'totalRevenue': round(total_revenue, 1),
+        'totalTickets': total_tickets,
+        'totalMessages': total_messages,
+        'totalEmails': total_emails,
         'recentActivities': recent_activities,
         'popularHotels': popular_hotels_data,
     })

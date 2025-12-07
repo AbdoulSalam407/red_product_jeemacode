@@ -34,9 +34,11 @@ interface User {
 }
 
 export const Messages: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  // Charger les données en cache au démarrage
+  const cachedMessages = localStorage.getItem('messages_cache');
+  const [messages, setMessages] = useState<Message[]>(cachedMessages ? JSON.parse(cachedMessages) : []);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!cachedMessages);
   const [showForm, setShowForm] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -79,11 +81,29 @@ export const Messages: React.FC = () => {
   }, [isLoading]);
 
   const fetchMessages = async () => {
-    setIsLoading(true);
     try {
+      const cacheKey = 'messages_cache';
+      const cacheTime = localStorage.getItem(cacheKey + '_time');
+      const now = Date.now();
+      
+      // Utiliser le cache si disponible et moins de 5 minutes
+      if (cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+          setMessages(JSON.parse(cachedData));
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      setIsLoading(true);
       const response = await api.get('/messages/');
       const messagesArray = Array.isArray(response.data) ? response.data : (response.data.results || response.data.data || []);
       setMessages(messagesArray);
+      
+      // Mettre en cache les données
+      localStorage.setItem(cacheKey, JSON.stringify(messagesArray));
+      localStorage.setItem(cacheKey + '_time', now.toString());
     } catch (error) {
       console.error('Erreur lors de la récupération des messages:', error);
       setMessages([]);

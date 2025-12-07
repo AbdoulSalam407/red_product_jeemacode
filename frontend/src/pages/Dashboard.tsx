@@ -35,6 +35,13 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     // Charger les tickets, messages et emails
     fetchDashboardData();
+    
+    // Rafraîchir les données toutes les 30 secondes
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Afficher/masquer l'alerte de chargement des statistiques
@@ -57,6 +64,22 @@ export const Dashboard: React.FC = () => {
 
   const fetchDashboardData = useCallback(async () => {
     try {
+      const cacheKey = 'dashboard_data_cache';
+      const cacheTime = localStorage.getItem(cacheKey + '_time');
+      const now = Date.now();
+      
+      // Utiliser le cache si disponible et moins de 5 minutes
+      if (cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+          const { tickets, messages, emails } = JSON.parse(cachedData);
+          setTickets(tickets);
+          setMessages(messages);
+          setEmails(emails);
+          return;
+        }
+      }
+
       // Faire tous les appels en parallèle
       const [ticketsRes, messagesRes, emailsRes] = await Promise.all([
         api.get('/tickets/'),
@@ -67,17 +90,28 @@ export const Dashboard: React.FC = () => {
       // Traiter les tickets
       const ticketsData = ticketsRes.data;
       const ticketsArray = Array.isArray(ticketsData) ? ticketsData : (ticketsData.results || ticketsData.data || []);
-      setTickets(ticketsArray.slice(0, 5));
+      const ticketsSliced = ticketsArray.slice(0, 5);
+      setTickets(ticketsSliced);
 
       // Traiter les messages
       const messagesData = messagesRes.data;
       const messagesArray = Array.isArray(messagesData) ? messagesData : (messagesData.results || messagesData.data || []);
-      setMessages(messagesArray.slice(0, 5));
+      const messagesSliced = messagesArray.slice(0, 5);
+      setMessages(messagesSliced);
 
       // Traiter les emails
       const emailsData = emailsRes.data;
       const emailsArray = Array.isArray(emailsData) ? emailsData : (emailsData.results || emailsData.data || []);
-      setEmails(emailsArray.slice(0, 5));
+      const emailsSliced = emailsArray.slice(0, 5);
+      setEmails(emailsSliced);
+      
+      // Mettre en cache les données
+      localStorage.setItem(cacheKey, JSON.stringify({
+        tickets: ticketsSliced,
+        messages: messagesSliced,
+        emails: emailsSliced
+      }));
+      localStorage.setItem(cacheKey + '_time', now.toString());
     } catch (error) {
       console.error('Erreur lors du chargement des données du dashboard:', error);
     }
@@ -88,6 +122,9 @@ export const Dashboard: React.FC = () => {
     { label: 'Utilisateurs', value: stats.totalUsers, icon: Users, color: 'bg-green-500' },
     { label: 'Réservations', value: stats.totalReservations, icon: TrendingUp, color: 'bg-purple-500' },
     { label: 'Revenus', value: `${stats.totalRevenue}K`, icon: BarChart3, color: 'bg-orange-500' },
+    { label: 'Tickets', value: stats.totalTickets, icon: Ticket, color: 'bg-red-500' },
+    { label: 'Messages', value: stats.totalMessages, icon: MessageSquare, color: 'bg-indigo-500' },
+    { label: 'Emails', value: stats.totalEmails, icon: Mail, color: 'bg-pink-500' },
   ];
 
   const getStatusColor = (status: string) => {

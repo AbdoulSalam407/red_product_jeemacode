@@ -37,6 +37,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<HotelFormData>({
+    mode: 'onBlur',
     defaultValues: {
       name: '',
       description: '',
@@ -98,19 +99,47 @@ export const HotelModal: React.FC<HotelModalProps> = ({
   };
 
   const handleFormSubmit = async (data: any) => {
-    // Convertir les nombres en types corrects
-    const formData = {
+    // Convertir les nombres
+    const convertedData = {
       ...data,
-      price_per_night: parseFloat(data.price_per_night),
-      rating: parseFloat(data.rating),
-      rooms_count: parseInt(data.rooms_count),
-      available_rooms: parseInt(data.available_rooms),
+      price_per_night: data.price_per_night ? parseFloat(data.price_per_night) : data.price_per_night,
+      rating: data.rating ? parseFloat(data.rating) : data.rating,
+      rooms_count: data.rooms_count ? parseInt(data.rooms_count) : data.rooms_count,
+      available_rooms: data.available_rooms ? parseInt(data.available_rooms) : data.available_rooms,
     };
     
-    if (selectedImage) {
-      formData.image = selectedImage;
+    console.log('Form data before submit:', convertedData);
+    
+    // En mode édition, envoyer seulement les champs modifiés
+    if (initialData) {
+      const modifiedData: any = {};
+      
+      // Comparer avec les données initiales et envoyer seulement les champs modifiés
+      Object.keys(convertedData).forEach((key) => {
+        const initialValue = initialData[key as keyof typeof initialData];
+        const currentValue = convertedData[key];
+        
+        // Comparer les valeurs (en convertissant en string pour éviter les problèmes de type)
+        if (String(initialValue) !== String(currentValue)) {
+          modifiedData[key] = currentValue;
+        }
+      });
+      
+      // Toujours inclure l'image si elle est sélectionnée (uniquement si c'est un File)
+      if (selectedImage instanceof File) {
+        modifiedData.image = selectedImage;
+      }
+      
+      console.log('Modified data:', modifiedData);
+      await onSubmit(modifiedData);
+    } else {
+      // En mode création, envoyer tous les champs
+      if (selectedImage instanceof File) {
+        convertedData.image = selectedImage;
+      }
+      console.log('Create data:', convertedData);
+      await onSubmit(convertedData);
     }
-    await onSubmit(formData);
     handleClose();
   };
 
@@ -136,13 +165,13 @@ export const HotelModal: React.FC<HotelModalProps> = ({
             <Input
               label="Nom"
               placeholder="Nom de l'hôtel"
-              {...register('name', { required: 'Le nom est requis' })}
+              {...register('name', { required: initialData ? false : 'Le nom est requis' })}
               error={errors.name}
             />
             <Input
               label="Ville"
               placeholder="Ville"
-              {...register('city', { required: 'La ville est requise' })}
+              {...register('city', { required: initialData ? false : 'La ville est requise' })}
               error={errors.city}
             />
           </div>
@@ -191,7 +220,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
           <Input
             label="Adresse"
             placeholder="Adresse complète"
-            {...register('address', { required: 'L\'adresse est requise' })}
+            {...register('address', { required: initialData ? false : 'L\'adresse est requise' })}
             error={errors.address}
           />
 
@@ -206,7 +235,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
               label="Email"
               type="email"
               placeholder="email@hotel.com"
-              {...register('email', { required: 'L\'email est requis' })}
+              {...register('email', { required: initialData ? false : 'L\'email est requis' })}
               error={errors.email}
             />
           </div>
@@ -218,7 +247,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
               placeholder="15000"
               step="100"
               {...register('price_per_night', { 
-                required: 'Le prix est requis',
+                required: initialData ? false : 'Le prix est requis',
                 min: 0,
               })}
               error={errors.price_per_night}
@@ -231,7 +260,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
               min="0"
               max="5"
               {...register('rating', { 
-                required: 'La note est requise',
+                required: initialData ? false : 'La note est requise',
                 min: 0,
                 max: 5,
               })}
@@ -245,7 +274,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
               type="number"
               placeholder="120"
               {...register('rooms_count', { 
-                required: 'Le nombre de chambres est requis',
+                required: initialData ? false : 'Le nombre de chambres est requis',
                 min: 1,
               })}
               error={errors.rooms_count}
@@ -255,7 +284,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
               type="number"
               placeholder="45"
               {...register('available_rooms', { 
-                required: 'Le nombre de chambres disponibles est requis',
+                required: initialData ? false : 'Le nombre de chambres disponibles est requis',
                 min: 0,
               })}
               error={errors.available_rooms}

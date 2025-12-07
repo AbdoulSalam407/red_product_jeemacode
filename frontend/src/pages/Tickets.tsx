@@ -17,9 +17,11 @@ interface Ticket {
 }
 
 export const Tickets: React.FC = () => {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  // Charger les données en cache au démarrage
+  const cachedTickets = localStorage.getItem('tickets_cache');
+  const [tickets, setTickets] = useState<Ticket[]>(cachedTickets ? JSON.parse(cachedTickets) : []);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!cachedTickets);
   const [showForm, setShowForm] = useState(false);
   const [editingTicketId, setEditingTicketId] = useState<number | null>(null);
   const [formData, setFormData] = useState<{
@@ -57,11 +59,29 @@ export const Tickets: React.FC = () => {
   }, [isLoading]);
 
   const fetchTickets = async () => {
-    setIsLoading(true);
     try {
+      const cacheKey = 'tickets_cache';
+      const cacheTime = localStorage.getItem(cacheKey + '_time');
+      const now = Date.now();
+      
+      // Utiliser le cache si disponible et moins de 5 minutes
+      if (cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+          setTickets(JSON.parse(cachedData));
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      setIsLoading(true);
       const response = await api.get('/tickets/');
       const ticketsArray = Array.isArray(response.data) ? response.data : (response.data.results || response.data.data || []);
       setTickets(ticketsArray);
+      
+      // Mettre en cache les données
+      localStorage.setItem(cacheKey, JSON.stringify(ticketsArray));
+      localStorage.setItem(cacheKey + '_time', now.toString());
     } catch (error) {
       console.error('Erreur lors de la récupération des tickets:', error);
       setTickets([]);
