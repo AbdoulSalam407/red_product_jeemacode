@@ -70,7 +70,11 @@ export const HotelModal: React.FC<HotelModalProps> = ({
       
       // Afficher l'image existante
       if (initialData.image && typeof initialData.image === 'string') {
-        setImagePreview(initialData.image);
+        // Construire l'URL correcte pour l'image
+        const imageUrl = initialData.image.startsWith('data:') || initialData.image.startsWith('http') || initialData.image.startsWith('/')
+          ? initialData.image
+          : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/media/${initialData.image}`;
+        setImagePreview(imageUrl);
       }
     } else {
       reset();
@@ -198,12 +202,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({
               <label htmlFor="hotel-image" className="cursor-pointer">
                 {imagePreview ? (
                   <div>
-                    <img src={imagePreview} alt="Preview" className="w-full h-12 object-cover rounded mb-0.5" />
-                    <p className="text-xs text-primary">Changer</p>
-                  </div>
-                ) : initialData?.image ? (
-                  <div>
-                    <img src={initialData.image as string} alt="Current" className="w-full h-12 object-cover rounded mb-0.5" />
+                    <img src={imagePreview} alt="Preview" className="w-full h-12 object-cover rounded mb-0.5" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     <p className="text-xs text-primary">Changer</p>
                   </div>
                 ) : (

@@ -88,13 +88,9 @@ export const useHotels = () => {
       setHotels(hotelsData);
       setError(null);
       
-      // Mettre en cache les données (sans images pour réduire la taille)
+      // Mettre en cache les données (avec les images pour une meilleure UX)
       try {
-        const hotelsWithoutImages = hotelsData.map((hotel: any) => ({
-          ...hotel,
-          image: null
-        }));
-        localStorage.setItem(CACHE_KEY, JSON.stringify(hotelsWithoutImages));
+        localStorage.setItem(CACHE_KEY, JSON.stringify(hotelsData));
         localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
       } catch (e) {
         console.warn('Impossible de mettre en cache les hôtels');
@@ -213,40 +209,25 @@ export const useHotels = () => {
       ));
       invalidateCache();
 
-      const hasImage = data.image instanceof File;
+      // Toujours utiliser FormData pour les updates (plus flexible)
+      const formData = new FormData();
       
-      if (hasImage) {
-        // Utiliser FormData si c'est un fichier
-        const formData = new FormData();
+      Object.keys(data).forEach((key) => {
+        if (key === 'id' || key === 'created_at' || key === 'updated_at') return;
         
-        Object.keys(data).forEach((key) => {
-          if (key === 'id' || key === 'created_at' || key === 'updated_at') return;
-          
-          if (key === 'image' && data[key as keyof typeof data] instanceof File) {
-            formData.append(key, data[key as keyof typeof data] as File);
-          } else if (key !== 'image' && data[key as keyof typeof data] !== null && data[key as keyof typeof data] !== undefined) {
-            formData.append(key, String(data[key as keyof typeof data]));
-          }
-        });
+        const value = data[key as keyof typeof data];
+        
+        if (key === 'image' && value instanceof File) {
+          formData.append(key, value as File);
+        } else if (key !== 'image' && value !== null && value !== undefined && value !== '') {
+          formData.append(key, String(value));
+        }
+      });
 
-        const response = await api.patch(`/hotels/${id}/`, formData);
-        
-        // ✅ METTRE À JOUR avec la réponse du serveur (qui inclut l'image)
-        setHotels(prev => prev.map(h => h.id === id ? response.data : h));
-      } else {
-        // Utiliser JSON pour les autres champs
-        const payload: any = {};
-        Object.keys(data).forEach((key) => {
-          if (key !== 'id' && key !== 'created_at' && key !== 'updated_at' && key !== 'image' && data[key as keyof typeof data] !== null && data[key as keyof typeof data] !== undefined) {
-            payload[key] = data[key as keyof typeof data];
-          }
-        });
-        
-        const response = await api.patch(`/hotels/${id}/`, payload);
-        
-        // ✅ METTRE À JOUR avec la réponse du serveur
-        setHotels(prev => prev.map(h => h.id === id ? response.data : h));
-      }
+      const response = await api.patch(`/hotels/${id}/`, formData);
+      
+      // ✅ METTRE À JOUR avec la réponse du serveur
+      setHotels(prev => prev.map(h => h.id === id ? response.data : h));
       
       Swal.fire({
         icon: 'success',

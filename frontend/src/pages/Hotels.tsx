@@ -121,28 +121,31 @@ export const Hotels: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  <div className="w-full h-40 bg-gradient-to-br from-primary to-secondary flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-40 bg-gradient-to-br from-primary to-secondary flex items-center justify-center overflow-hidden relative">
                     {hotel.image ? (
-                      <img 
-                        src={typeof hotel.image === 'string' && (hotel.image.startsWith('data:') || hotel.image.startsWith('http') || hotel.image.startsWith('/'))
-                          ? hotel.image 
-                          : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/media/${hotel.image}`
-                        }
-                        alt={hotel.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          // Si l'image ne charge pas, afficher la première lettre
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
+                      <>
+                        <img 
+                          src={
+                            typeof hotel.image === 'string'
+                              ? hotel.image.startsWith('data:') || hotel.image.startsWith('http') || hotel.image.startsWith('/')
+                                ? hotel.image 
+                                : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/media/${hotel.image}`
+                              : ''
+                          }
+                          alt={hotel.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            // Si l'image ne charge pas, afficher la première lettre
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                        <span className="absolute text-white text-4xl font-bold hidden">{hotel.name.charAt(0)}</span>
+                      </>
                     ) : (
                       <span className="text-white text-4xl font-bold">{hotel.name.charAt(0)}</span>
                     )}
-                    {!hotel.image || (hotel.image && typeof hotel.image === 'string' && !hotel.image.startsWith('data:') && !hotel.image.startsWith('http') && !hotel.image.startsWith('/')) ? (
-                      <span className="text-white text-4xl font-bold">{hotel.name.charAt(0)}</span>
-                    ) : null}
                   </div>
                   <div className="p-4 flex-1 flex flex-col">
                     <h3 className="text-lg font-bold text-gray-900">{hotel.name}</h3>
