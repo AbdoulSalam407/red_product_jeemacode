@@ -235,6 +235,9 @@ export const useHotels = () => {
       // ✅ METTRE À JOUR avec la réponse du serveur
       setHotels(prev => prev.map(h => h.id === id ? response.data : h));
       
+      // ✅ Recharger les données depuis le serveur pour synchroniser
+      await fetchHotels(true); // skipCache = true
+      
       Swal.fire({
         icon: 'success',
         title: '✅ Hôtel mis à jour avec succès',
@@ -313,18 +316,23 @@ export const useHotels = () => {
       // Sauvegarder l'état précédent pour rollback en cas d'erreur
       previousHotels = hotels;
       
+      // Récupérer le nom de l'hôtel AVANT suppression
+      const deletedHotel = previousHotels.find(h => h.id === id);
+      
       // Marquer l'hôtel comme en cours de synchronisation
       setSyncingHotelIds(prev => new Set([...prev, id]));
       
-      // Supprimer l'hôtel immédiatement (optimistic update)
-      setHotels(prev => prev.filter(h => h.id !== id));
+      // ✅ IMPORTANT: Invalider le cache AVANT suppression
       invalidateCache();
 
-      // Envoyer la requête en arrière-plan
+      // Envoyer la requête au serveur
       await api.delete(`/hotels/${id}/`);
       
-      // Récupérer le nom de l'hôtel supprimé
-      const deletedHotel = previousHotels.find(h => h.id === id);
+      // ✅ Supprimer l'hôtel APRÈS confirmation du serveur
+      setHotels(prev => prev.filter(h => h.id !== id));
+      
+      // ✅ Recharger les données depuis le serveur pour synchroniser
+      await fetchHotels(true); // skipCache = true
       
       Swal.fire({
         icon: 'success',
