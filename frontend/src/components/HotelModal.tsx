@@ -69,11 +69,21 @@ export const HotelModal: React.FC<HotelModalProps> = ({
       setValue('is_active', initialData.is_active);
       
       // Afficher l'image existante
-      if (initialData.image && typeof initialData.image === 'string') {
-        // Construire l'URL correcte pour l'image
-        const imageUrl = initialData.image.startsWith('data:') || initialData.image.startsWith('http') || initialData.image.startsWith('/')
-          ? initialData.image
-          : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/media/${initialData.image}`;
+      if ((initialData as any).image_base64) {
+        // L'image est déjà en base64
+        setImagePreview((initialData as any).image_base64);
+      } else if (initialData.image && typeof initialData.image === 'string') {
+        // Fallback pour les anciennes images (chemin fichier)
+        let imageUrl = initialData.image;
+        
+        // Si c'est déjà une URL complète ou data URL
+        if (!initialData.image.startsWith('data:') && !initialData.image.startsWith('http') && !initialData.image.startsWith('/')) {
+          // Sinon, construire l'URL complète
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+          const baseUrl = apiUrl.replace('/api', '');
+          imageUrl = `${baseUrl}/media/${initialData.image}`;
+        }
+        
         setImagePreview(imageUrl);
       }
     } else {

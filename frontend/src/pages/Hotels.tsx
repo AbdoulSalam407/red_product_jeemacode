@@ -1,15 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { Navbar, Sidebar, Card, Button, HotelModal } from '../components';
-import { Search, Plus, MapPin, DollarSign, Star, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, MapPin, DollarSign, Star, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { useHotels } from '../hooks/useHotels';
 
 export const Hotels: React.FC = () => {
-  const { hotels, isLoading, createHotel, updateHotel, deleteHotel, syncingHotelIds } = useHotels();
+  const { hotels, isLoading, createHotel, updateHotel, deleteHotel, syncingHotelIds, fetchHotels } = useHotels();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-refresh automatique au démarrage
+  useEffect(() => {
+    // Charger les données immédiatement
+    fetchHotels(true);
+
+    // Configurer l'auto-refresh toutes les 30 secondes
+    const interval = setInterval(() => {
+      fetchHotels(true);
+    }, 30 * 1000); // 30 secondes
+
+    // Cleanup
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [fetchHotels]);
 
   // Afficher/masquer l'alerte de chargement
   useEffect(() => {
@@ -28,6 +44,18 @@ export const Hotels: React.FC = () => {
       Swal.close();
     }
   }, [isLoading]);
+
+  // Fonction pour rafraîchir manuellement
+  const handleManualRefresh = async () => {
+    await fetchHotels(true);
+    Swal.fire({
+      icon: 'success',
+      title: 'Données rechargées',
+      text: 'Les hôtels ont été mis à jour',
+      timer: 2000,
+      timerProgressBar: true,
+    });
+  };
 
   // Filtrer les hôtels localement aussi
   const filteredHotels = hotels.filter(hotel =>
@@ -90,10 +118,20 @@ export const Hotels: React.FC = () => {
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Hôtels</h1>
-              <Button variant="primary" size="lg" onClick={handleAddHotel} className="w-full sm:w-auto">
-                <Plus size={20} className="mr-2" />
-                Ajouter un hôtel
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button
+                  onClick={handleManualRefresh}
+                  disabled={isLoading}
+                  title="Rafraîchir les données"
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition disabled:opacity-50"
+                >
+                  <RefreshCw size={20} className={isLoading ? 'animate-spin' : ''} />
+                </button>
+                <Button variant="primary" size="lg" onClick={handleAddHotel} className="flex-1 sm:flex-none">
+                  <Plus size={20} className="mr-2" />
+                  Ajouter un hôtel
+                </Button>
+              </div>
             </div>
 
             <Card className="mb-6 sm:mb-8">
@@ -122,16 +160,10 @@ export const Hotels: React.FC = () => {
                     </div>
                   )}
                   <div className="w-full h-40 bg-gradient-to-br from-primary to-secondary flex items-center justify-center overflow-hidden relative">
-                    {hotel.image ? (
+                    {(hotel as any).image_base64 ? (
                       <>
                         <img 
-                          src={
-                            typeof hotel.image === 'string'
-                              ? hotel.image.startsWith('data:') || hotel.image.startsWith('http') || hotel.image.startsWith('/')
-                                ? hotel.image 
-                                : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/media/${hotel.image}`
-                              : ''
-                          }
+                          src={(hotel as any).image_base64}
                           alt={hotel.name}
                           className="w-full h-full object-cover"
                           loading="lazy"

@@ -9,7 +9,26 @@ class Hotel(models.Model):
     email = models.EmailField()
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2, db_index=True)
     rating = models.FloatField(default=0)
-    image = models.ImageField(upload_to='hotels/', blank=True, null=True)
+    # Image stockée en base64 (pas de fichier sur disque)
+    image_base64 = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Image encodée en base64 (data:image/jpeg;base64,...)"
+    )
+    image_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('jpeg', 'JPEG'),
+            ('png', 'PNG'),
+            ('gif', 'GIF'),
+            ('webp', 'WebP'),
+            ('svg', 'SVG'),
+        ],
+        blank=True,
+        null=True,
+        default='jpeg'
+    )
+    image_size = models.IntegerField(default=0, help_text="Taille en bytes")
     rooms_count = models.IntegerField(default=0)
     available_rooms = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True, db_index=True)

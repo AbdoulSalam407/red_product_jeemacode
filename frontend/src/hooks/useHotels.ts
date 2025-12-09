@@ -114,17 +114,17 @@ export const useHotels = () => {
     const optimisticId = -Math.random();
     
     try {
-      const formData = new FormData();
+      // Préparer les données pour l'envoi
+      const sendData: any = { ...data };
       
-      // Ajouter tous les champs au FormData
-      Object.keys(data).forEach((key) => {
-        const value = data[key as keyof typeof data];
-        if (key === 'image' && value instanceof File) {
-          formData.append(key, value as File);
-        } else if (key !== 'image' && value !== null && value !== undefined && value !== '') {
-          formData.append(key, String(value));
-        }
-      });
+      // Convertir l'image File en base64 si présente
+      if (data.image instanceof File) {
+        const imageBase64 = await fileToBase64(data.image);
+        sendData.image_base64 = imageBase64;
+        delete sendData.image;
+      } else {
+        delete sendData.image;
+      }
 
       // Créer un nouvel hôtel optimiste avec un ID temporaire
       const optimisticHotel: Hotel = {
@@ -138,8 +138,8 @@ export const useHotels = () => {
       setHotels(prev => [optimisticHotel, ...prev]);
       invalidateCache();
 
-      // Envoyer la requête en arrière-plan
-      const response = await api.post('/hotels/', formData);
+      // Envoyer la requête en arrière-plan (en JSON)
+      const response = await api.post('/hotels/', sendData);
       
       // Remplacer l'hôtel optimiste par la réponse réelle du serveur
       setHotels(prev => prev.map(h => h.id === optimisticId ? response.data : h));
@@ -187,6 +187,16 @@ export const useHotels = () => {
     }
   }, [invalidateCache, fetchHotels]);
 
+  // Convertir un fichier en base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Mettre à jour un hôtel
   const updateHotel = useCallback(async (id: number, data: Partial<Hotel>) => {
     let previousHotels: Hotel[] = [];
@@ -209,22 +219,18 @@ export const useHotels = () => {
       ));
       invalidateCache();
 
-      // Toujours utiliser FormData pour les updates (plus flexible)
-      const formData = new FormData();
+      // Préparer les données pour l'envoi
+      const sendData: any = { ...data };
       
-      Object.keys(data).forEach((key) => {
-        if (key === 'id' || key === 'created_at' || key === 'updated_at') return;
-        
-        const value = data[key as keyof typeof data];
-        
-        if (key === 'image' && value instanceof File) {
-          formData.append(key, value as File);
-        } else if (key !== 'image' && value !== null && value !== undefined && value !== '') {
-          formData.append(key, String(value));
-        }
-      });
-
-      const response = await api.patch(`/hotels/${id}/`, formData);
+      // Convertir l'image File en base64 si présente
+      if (data.image instanceof File) {
+        const imageBase64 = await fileToBase64(data.image);
+        sendData.image_base64 = imageBase64;
+        delete sendData.image;
+      }
+      
+      // Envoyer les données en JSON
+      const response = await api.patch(`/hotels/${id}/`, sendData);
       
       // ✅ METTRE À JOUR avec la réponse du serveur
       setHotels(prev => prev.map(h => h.id === id ? response.data : h));

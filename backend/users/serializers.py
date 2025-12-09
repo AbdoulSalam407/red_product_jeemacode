@@ -37,7 +37,8 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, data):
         from django.contrib.auth import authenticate
-        user = authenticate(username=data['email'], password=data['password'])
+        # Utiliser email comme username car USERNAME_FIELD = 'email'
+        user = authenticate(email=data['email'], password=data['password'])
         if not user:
             raise serializers.ValidationError('Email ou mot de passe incorrect')
         data['user'] = user
